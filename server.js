@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const Feedback = require('./models/Feedback');
 const Booking = require('./models/Booking');
 const cors = require('cors');
 
@@ -70,6 +71,35 @@ app.delete('/api/bookings/:id', async (req, res) => {
     const deleted = await Booking.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ error: 'Booking not found' });
     res.json({ msg: 'Booking deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST feedback
+app.post('/api/feedback', async (req, res) => {
+  try {
+    const { name, email, message, rating } = req.body;
+
+    const feedback = new Feedback({
+      name,
+      email,
+      message,
+      rating
+    });
+
+    await feedback.save();
+    res.status(201).json(feedback);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// GET all feedback
+app.get('/api/feedback', async (_, res) => {
+  try {
+    const feedbackList = await Feedback.find().sort({ createdAt: -1 });
+    res.json(feedbackList);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
