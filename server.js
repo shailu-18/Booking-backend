@@ -9,6 +9,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -30,40 +31,47 @@ app.get('/api/bookings', async (_, res) => {
 // POST a new booking
 app.post('/api/bookings', async (req, res) => {
   try {
+    console.log("Received booking:", req.body);
+
     const {
-      customerName,
-      customerEmail,
       destination,
-      tripDuration,
-      numberOfPeople,
-      travelers,
-      travelDate,
-      specialRequests
+      tripDate,
+      duration,
+      travellers,
+      contactNumber,
+      email
     } = req.body;
 
-    // Optional: Validate that numberOfPeople === travelers.length
-
-    if (numberOfPeople !== travelers.length) {
-      return res.status(400).json({ error: 'Number of people does not match traveler details.' });
+    if (!travellers || travellers.length === 0) {
+      return res.status(400).json({ error: "No travellers provided" });
     }
 
-    const newBooking = new Booking({
-      customerName,
-      customerEmail,
-      destination,
-      tripDuration,
-      numberOfPeople,
-      travelers,
-      travelDate,
-      specialRequests
-    });
+    console.log("customerName:", travelers[0].name);
 
+    const bookingData = {
+      customerName: travellers[0].name,
+      customerEmail: email,
+      contactNumber: String(contactNumber),
+      destination,
+      tripDuration: Number(duration),
+      numberOfPeople: travellers.length,
+      travelers: travellers,
+      travelDate: new Date(tripDate)
+    };
+
+    console.log("Saving booking:", bookingData);
+
+    const newBooking = new Booking(bookingData);
     await newBooking.save();
-    res.status(201).json(newBooking);
+
+    res.status(201).json({ message: "Booking successful" });
+
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error("FULL ERROR:", err);
+    res.status(500).json({ error: err.message });
   }
 });
+
 
 // DELETE a booking by ID
 app.delete('/api/bookings/:id', async (req, res) => {
@@ -79,14 +87,12 @@ app.delete('/api/bookings/:id', async (req, res) => {
 // POST feedback
 app.post('/api/feedback', async (req, res) => {
   try {
-    const { name, email, message, rating } = req.body;
+   const { email, message } = req.body;
 
     const feedback = new Feedback({
-      name,
-      email,
-      message,
-      rating
-    });
+  email,
+  message
+});
 
     await feedback.save();
     res.status(201).json(feedback);
@@ -107,4 +113,6 @@ app.get('/api/feedback', async (_, res) => {
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`BookAndGo server running on port ${PORT}`));
+app.listen(PORT, () => 
+  console.log(`BookAndGo server running on port ${PORT}`)
+);
