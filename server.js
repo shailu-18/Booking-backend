@@ -46,7 +46,7 @@ app.post('/api/bookings', async (req, res) => {
       return res.status(400).json({ error: "No travellers provided" });
     }
 
-    console.log("customerName:", travelers[0].name);
+    console.log("customerName:", travellers[0].name);
 
     const bookingData = {
       customerName: travellers[0].name,
@@ -55,7 +55,7 @@ app.post('/api/bookings', async (req, res) => {
       destination,
       tripDuration: Number(duration),
       numberOfPeople: travellers.length,
-      travelers: travellers,
+      travellers: travellers,
       travelDate: new Date(tripDate)
     };
 
